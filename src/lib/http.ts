@@ -25,6 +25,7 @@ export interface RouteResponse {
 }
 
 export interface Route {
+  public?: false;
   roles: readonly Role[];
   handler: (ctx: RouteContext) => Promise<RouteResponse>;
 }
@@ -41,7 +42,7 @@ export type PublicRouteContext = Omit<RouteContext, 'user'>;
 export type RouteTable = Record<string, Route | PublicRoute>;
 
 export function isPublicRoute(route: Route | PublicRoute): route is PublicRoute {
-  return 'public' in route && route.public;
+  return route.public === true;
 }
 
 export function json(status: number, body?: unknown): HttpResult {

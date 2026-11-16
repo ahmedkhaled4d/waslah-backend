@@ -19,7 +19,11 @@ export const usersRepository = {
   },
 
   update(id: string, data: Partial<Omit<User, '_id'>>): Promise<User | null> {
-    return UserModel.findByIdAndUpdate(id, { $set: data }, { returnDocument: 'after' }).lean<User>();
+    return UserModel.findByIdAndUpdate(
+      id,
+      { $set: data },
+      { returnDocument: 'after' },
+    ).lean<User>();
   },
 
   async touchLastLogin(id: User['_id'], at: Date): Promise<void> {

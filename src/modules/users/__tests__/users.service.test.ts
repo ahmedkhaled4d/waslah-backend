@@ -16,7 +16,7 @@ vi.mock('../../../lib/auth', async () => {
   const actual = await vi.importActual<typeof import('../../../lib/auth')>('../../../lib/auth');
   return {
     ...actual,
-    signToken: vi.fn(async () => ({ token: 'jwt', expiresAt: new Date('2030-01-01') })),
+    signToken: vi.fn(() => Promise.resolve({ token: 'jwt', expiresAt: new Date('2030-01-01') })),
   };
 });
 
@@ -44,7 +44,10 @@ beforeEach(() => {
 describe('login', () => {
   it('returns a token and the user without the password hash', async () => {
     vi.mocked(usersRepository.findByEmail).mockResolvedValue(admin);
-    const result = await usersService.login({ email: 'admin@example.com', password: 's3cret-pass' });
+    const result = await usersService.login({
+      email: 'admin@example.com',
+      password: 's3cret-pass',
+    });
     expect(result.token).toBe('jwt');
     expect(result.tokenType).toBe('Bearer');
     expect(result.user).not.toHaveProperty('passwordHash');
@@ -135,7 +138,12 @@ describe('create', () => {
 
     vi.mocked(usersRepository.create).mockRejectedValue({ code: 11000 });
     await expect(
-      usersService.create({ email: 'admin@example.com', name: 'A', password: 's3cret-pass', role: 'agent' }),
+      usersService.create({
+        email: 'admin@example.com',
+        name: 'A',
+        password: 's3cret-pass',
+        role: 'agent',
+      }),
     ).rejects.toMatchObject({ code: 'USER_EXISTS', status: 409 });
   });
 });

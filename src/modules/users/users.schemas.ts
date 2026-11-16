@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { ROLES } from '../../lib/auth';
 import { USER_STATUSES } from './users.model';
 
-const email = z.string().trim().toLowerCase().max(254).pipe(z.email());
+const email = z.email().toLowerCase().max(254);
 const password = z.string().min(8).max(200);
 
 export const loginSchema = z.object({

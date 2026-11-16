@@ -1,7 +1,10 @@
-import { randomBytes, scrypt as scryptCb, timingSafeEqual } from 'node:crypto';
-import { promisify } from 'node:util';
+import { randomBytes, scrypt as scryptCb, timingSafeEqual, type ScryptOptions } from 'node:crypto';
 
-const scrypt = promisify(scryptCb);
+function scrypt(password: string, salt: Buffer, keyLength: number, options: ScryptOptions) {
+  return new Promise<Buffer>((resolve, reject) => {
+    scryptCb(password, salt, keyLength, options, (err, key) => (err ? reject(err) : resolve(key)));
+  });
+}
 
 /** scrypt parameters (OWASP recommended minimum: N=2^14, r=8, p=1 for interactive logins). */
 const PARAMS = { N: 16384, r: 8, p: 1 } as const;
@@ -14,7 +17,7 @@ const SALT_LENGTH = 16;
  */
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(SALT_LENGTH);
-  const hash = (await scrypt(password, salt, KEY_LENGTH, PARAMS)) as Buffer;
+  const hash = await scrypt(password, salt, KEY_LENGTH, PARAMS);
   return [
     'scrypt',
     PARAMS.N,
@@ -30,10 +33,10 @@ export async function verifyPassword(password: string, stored: string): Promise<
   const [algo, n, r, p, salt, hash] = stored.split('$');
   if (algo !== 'scrypt' || !n || !r || !p || !salt || !hash) return false;
   const expected = Buffer.from(hash, 'base64url');
-  const actual = (await scrypt(password, Buffer.from(salt, 'base64url'), expected.length, {
+  const actual = await scrypt(password, Buffer.from(salt, 'base64url'), expected.length, {
     N: Number(n),
     r: Number(r),
     p: Number(p),
-  })) as Buffer;
+  });
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }

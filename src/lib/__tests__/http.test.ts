@@ -1,25 +1,32 @@
 import type { Context } from 'aws-lambda';
 import { describe, expect, it, vi } from 'vitest';
+import { UnauthorizedError } from '../errors';
 
 vi.mock('../auth', async () => {
   const actual = await vi.importActual<typeof import('../auth')>('../auth');
   return {
     ...actual,
-    authenticate: vi.fn(async (header: string | undefined) => {
-      if (header === 'Bearer agent') return { id: 'u1', role: 'agent' as const };
-      throw new actual.UnauthorizedError();
+    authenticate: vi.fn((header: string | undefined) => {
+      if (header === 'Bearer agent') return Promise.resolve({ id: 'u1', role: 'agent' as const });
+      return Promise.reject(new UnauthorizedError());
     }),
   };
 });
-vi.mock('../db', () => ({ connectDb: vi.fn(async () => undefined) }));
+vi.mock('../db', () => ({ connectDb: vi.fn(() => Promise.resolve(undefined)) }));
 
 const { authenticate } = await import('../auth');
 const { createHttpHandler, ok } = await import('../http');
 
 const handler = createHttpHandler({
-  'POST /v1/auth/login': { public: true, handler: async (ctx) => ok({ body: ctx.body }) },
-  'GET /v1/auth/me': { roles: ['agent'], handler: async (ctx) => ok({ id: ctx.user.id }) },
-  'GET /v1/users': { roles: ['admin'], handler: async () => ok({}) },
+  'POST /v1/auth/login': {
+    public: true,
+    handler: (ctx) => Promise.resolve(ok({ body: ctx.body })),
+  },
+  'GET /v1/auth/me': {
+    roles: ['agent'],
+    handler: (ctx) => Promise.resolve(ok({ id: ctx.user.id })),
+  },
+  'GET /v1/users': { roles: ['admin'], handler: () => Promise.resolve(ok({})) },
 });
 
 const invoke = (routeKey: string, headers: Record<string, string> = {}, body?: string) =>
@@ -45,7 +52,8 @@ describe('createHttpHandler', () => {
   it('requires a token on private routes', async () => {
     const res = await invoke('GET /v1/auth/me');
     expect(res.statusCode).toBe(401);
-    expect(JSON.parse(res.body ?? '').error.code).toBe('UNAUTHORIZED');
+    const body = JSON.parse(res.body ?? '') as { error: { code: string } };
+    expect(body.error.code).toBe('UNAUTHORIZED');
   });
 
   it('passes the authenticated user to the handler', async () => {

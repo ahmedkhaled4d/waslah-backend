@@ -25,10 +25,18 @@ export interface LoginResult {
  */
 const dummyHash = hashPassword('dummy-password-for-timing');
 
+/** Explicit pick so a new sensitive field can never leak by accident. */
 export function toPublicUser(user: User): PublicUser {
-  // Strip the hash; everything else is safe to return.
-  const { passwordHash: _passwordHash, ...rest } = user;
-  return rest;
+  return {
+    _id: user._id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    status: user.status,
+    lastLoginAt: user.lastLoginAt,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
 }
 
 function invalidCredentials(): UnauthorizedError {
