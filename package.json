@@ -1,0 +1,46 @@
+{
+  "name": "waslah-backend",
+  "version": "1.0.0",
+  "description": "Waslah WhatsApp CRM backend",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "synth": "cdk synth",
+    "deploy:dev": "cdk deploy --context stage=dev",
+    "deploy:prod": "cdk deploy --context stage=prod",
+    "sync-indexes": "tsx scripts/sync-indexes.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-lambda-powertools/logger": "^2.36.0",
+    "@aws-lambda-powertools/parameters": "^2.36.0",
+    "@aws-sdk/client-secrets-manager": "^3.1169.0",
+    "@aws-sdk/client-sqs": "^3.1169.0",
+    "jose": "^6.2.17",
+    "mongoose": "^9.12.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/aws-lambda": "^8.10.164",
+    "@types/node": "^26.6.6",
+    "aws-cdk": "^2.1148.1",
+    "aws-cdk-lib": "^2.277.0",
+    "constructs": "^10.8.1",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.15.0",
+    "prettier": "^3.10.1",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.2",
+    "vitest": "^5.1.0"
+  },
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  }
+}

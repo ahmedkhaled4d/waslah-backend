@@ -1,0 +1,38 @@
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "102290129340398",
+      "changes": [
+        {
+          "field": "messages",
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "966500000000",
+              "phone_number_id": "106540352242922"
+            },
+            "contacts": [{ "profile": { "name": "Sara" }, "wa_id": "966512345612" }],
+            "messages": [
+              {
+                "from": "966512345612",
+                "id": "wamid.HBgMOTY2NTEyMzQ1NjEyFQIAEhggQUJDREVGMDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3OAA=",
+                "timestamp": "1763290000",
+                "type": "text",
+                "text": { "body": "Hi, what are your prices?" }
+              }
+            ],
+            "statuses": [
+              {
+                "id": "wamid.OUTBOUND1",
+                "status": "delivered",
+                "timestamp": "1763290005",
+                "recipient_id": "966512345612"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
