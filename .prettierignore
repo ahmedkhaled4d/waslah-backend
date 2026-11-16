@@ -1,0 +1,4 @@
+openapi.json
+cdk.out/
+node_modules/
+coverage/

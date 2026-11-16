@@ -131,16 +131,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "NOT_FOUND",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
           }
         }
       }
@@ -259,16 +249,6 @@
           },
           "403": {
             "description": "FORBIDDEN (role or ownership check failed)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NOT_FOUND",
             "content": {
               "application/json": {
                 "schema": {
@@ -422,16 +402,6 @@
           },
           "403": {
             "description": "FORBIDDEN (role or ownership check failed)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NOT_FOUND",
             "content": {
               "application/json": {
                 "schema": {
@@ -784,16 +754,6 @@
           },
           "403": {
             "description": "FORBIDDEN (role or ownership check failed)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NOT_FOUND",
             "content": {
               "application/json": {
                 "schema": {
@@ -1298,7 +1258,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "pattern": "^[a-f\\d]{24}$"
+              "pattern": "^[a-fA-F0-9]{24}$"
             }
           },
           {
@@ -1330,7 +1290,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "pattern": "^[a-f\\d]{24}$"
+              "pattern": "^[a-fA-F0-9]{24}$"
             }
           },
           {
@@ -1756,7 +1716,7 @@
                 "properties": {
                   "inboxId": {
                     "type": "string",
-                    "pattern": "^[a-f\\d]{24}$"
+                    "pattern": "^[a-fA-F0-9]{24}$"
                   }
                 },
                 "required": [
@@ -1933,7 +1893,7 @@
                 "properties": {
                   "labelId": {
                     "type": "string",
-                    "pattern": "^[a-f\\d]{24}$"
+                    "pattern": "^[a-fA-F0-9]{24}$"
                   }
                 },
                 "required": [
@@ -2464,16 +2424,6 @@
               }
             }
           },
-          "404": {
-            "description": "NOT_FOUND",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
           "409": {
             "description": "LABEL_EXISTS",
             "content": {
@@ -2820,16 +2770,6 @@
           },
           "403": {
             "description": "FORBIDDEN (role or ownership check failed)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NOT_FOUND",
             "content": {
               "application/json": {
                 "schema": {
@@ -3337,7 +3277,7 @@
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "pattern": "^[a-f\\d]{24}$"
+                      "pattern": "^[a-fA-F0-9]{24}$"
                     }
                   }
                 },
@@ -3642,7 +3582,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "pattern": "^[a-f\\d]{24}$"
+              "pattern": "^[a-fA-F0-9]{24}$"
             }
           },
           {
@@ -3651,7 +3591,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "pattern": "^[a-f\\d]{24}$"
+              "pattern": "^[a-fA-F0-9]{24}$"
             }
           },
           {
@@ -3683,7 +3623,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "pattern": "^[a-f\\d]{24}$"
+              "pattern": "^[a-fA-F0-9]{24}$"
             }
           },
           {
@@ -3692,7 +3632,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "pattern": "^[a-f\\d]{24}$"
+              "pattern": "^[a-fA-F0-9]{24}$"
             }
           },
           {
@@ -3814,19 +3754,19 @@
                   },
                   "pipelineId": {
                     "type": "string",
-                    "pattern": "^[a-f\\d]{24}$"
+                    "pattern": "^[a-fA-F0-9]{24}$"
                   },
                   "stageId": {
                     "type": "string",
-                    "pattern": "^[a-f\\d]{24}$"
+                    "pattern": "^[a-fA-F0-9]{24}$"
                   },
                   "contactId": {
                     "type": "string",
-                    "pattern": "^[a-f\\d]{24}$"
+                    "pattern": "^[a-fA-F0-9]{24}$"
                   },
                   "conversationId": {
                     "type": "string",
-                    "pattern": "^[a-f\\d]{24}$"
+                    "pattern": "^[a-fA-F0-9]{24}$"
                   },
                   "ownerId": {
                     "type": "string",
@@ -3893,7 +3833,7 @@
             }
           },
           "404": {
-            "description": "NOT_FOUND",
+            "description": "NOT_FOUND, NOT_FOUND (pipeline, stage, contact or conversation)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4216,11 +4156,11 @@
                 "properties": {
                   "stageId": {
                     "type": "string",
-                    "pattern": "^[a-f\\d]{24}$"
+                    "pattern": "^[a-fA-F0-9]{24}$"
                   },
                   "pipelineId": {
                     "type": "string",
-                    "pattern": "^[a-f\\d]{24}$"
+                    "pattern": "^[a-fA-F0-9]{24}$"
                   }
                 },
                 "required": [
@@ -4272,7 +4212,7 @@
             }
           },
           "404": {
-            "description": "NOT_FOUND",
+            "description": "NOT_FOUND, NOT_FOUND (deal, pipeline or stage)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4448,7 +4388,7 @@
                 "properties": {
                   "labelId": {
                     "type": "string",
-                    "pattern": "^[a-f\\d]{24}$"
+                    "pattern": "^[a-fA-F0-9]{24}$"
                   }
                 },
                 "required": [
@@ -4638,14 +4578,12 @@
               "code",
               "message",
               "details"
-            ],
-            "additionalProperties": false
+            ]
           }
         },
         "required": [
           "error"
         ],
-        "additionalProperties": false,
         "description": "Standard error envelope returned by every failed request"
       },
       "User": {
@@ -4653,7 +4591,7 @@
         "properties": {
           "_id": {
             "type": "string",
-            "pattern": "^[a-f\\d]{24}$",
+            "pattern": "^[a-fA-F0-9]{24}$",
             "description": "MongoDB ObjectId (24 hex chars)"
           },
           "email": {
@@ -4682,19 +4620,16 @@
           "lastLoginAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           },
           "createdAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           },
           "updatedAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           }
         },
@@ -4706,8 +4641,7 @@
           "status",
           "createdAt",
           "updatedAt"
-        ],
-        "additionalProperties": false
+        ]
       },
       "LoginResponse": {
         "type": "object",
@@ -4723,7 +4657,6 @@
           "expiresAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "Tokens last 12 hours; log in again after that"
           },
           "user": {
@@ -4731,7 +4664,7 @@
             "properties": {
               "_id": {
                 "type": "string",
-                "pattern": "^[a-f\\d]{24}$",
+                "pattern": "^[a-fA-F0-9]{24}$",
                 "description": "MongoDB ObjectId (24 hex chars)"
               },
               "email": {
@@ -4760,19 +4693,16 @@
               "lastLoginAt": {
                 "type": "string",
                 "format": "date-time",
-                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
                 "description": "ISO 8601 timestamp (UTC)"
               },
               "createdAt": {
                 "type": "string",
                 "format": "date-time",
-                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
                 "description": "ISO 8601 timestamp (UTC)"
               },
               "updatedAt": {
                 "type": "string",
                 "format": "date-time",
-                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
                 "description": "ISO 8601 timestamp (UTC)"
               }
             },
@@ -4784,8 +4714,7 @@
               "status",
               "createdAt",
               "updatedAt"
-            ],
-            "additionalProperties": false
+            ]
           }
         },
         "required": [
@@ -4793,15 +4722,14 @@
           "tokenType",
           "expiresAt",
           "user"
-        ],
-        "additionalProperties": false
+        ]
       },
       "Inbox": {
         "type": "object",
         "properties": {
           "_id": {
             "type": "string",
-            "pattern": "^[a-f\\d]{24}$",
+            "pattern": "^[a-fA-F0-9]{24}$",
             "description": "MongoDB ObjectId (24 hex chars)"
           },
           "name": {
@@ -4829,13 +4757,11 @@
           "createdAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           },
           "updatedAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           }
         },
@@ -4847,25 +4773,24 @@
           "isDefault",
           "createdAt",
           "updatedAt"
-        ],
-        "additionalProperties": false
+        ]
       },
       "Conversation": {
         "type": "object",
         "properties": {
           "_id": {
             "type": "string",
-            "pattern": "^[a-f\\d]{24}$",
+            "pattern": "^[a-fA-F0-9]{24}$",
             "description": "MongoDB ObjectId (24 hex chars)"
           },
           "contactId": {
             "type": "string",
-            "pattern": "^[a-f\\d]{24}$",
+            "pattern": "^[a-fA-F0-9]{24}$",
             "description": "MongoDB ObjectId (24 hex chars)"
           },
           "inboxId": {
             "type": "string",
-            "pattern": "^[a-f\\d]{24}$",
+            "pattern": "^[a-fA-F0-9]{24}$",
             "description": "MongoDB ObjectId (24 hex chars)"
           },
           "status": {
@@ -4895,14 +4820,13 @@
             "type": "array",
             "items": {
               "type": "string",
-              "pattern": "^[a-f\\d]{24}$",
+              "pattern": "^[a-fA-F0-9]{24}$",
               "description": "MongoDB ObjectId (24 hex chars)"
             }
           },
           "lastMessageAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           },
           "lastMessagePreview": {
@@ -4911,8 +4835,7 @@
           "lastInboundAt": {
             "description": "Last customer message; free-form replies are allowed for 24h after it",
             "type": "string",
-            "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+            "format": "date-time"
           },
           "unreadCount": {
             "type": "integer"
@@ -4920,19 +4843,16 @@
           "resolvedAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           },
           "createdAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           },
           "updatedAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           }
         },
@@ -4948,25 +4868,24 @@
           "unreadCount",
           "createdAt",
           "updatedAt"
-        ],
-        "additionalProperties": false
+        ]
       },
       "Message": {
         "type": "object",
         "properties": {
           "_id": {
             "type": "string",
-            "pattern": "^[a-f\\d]{24}$",
+            "pattern": "^[a-fA-F0-9]{24}$",
             "description": "MongoDB ObjectId (24 hex chars)"
           },
           "conversationId": {
             "type": "string",
-            "pattern": "^[a-f\\d]{24}$",
+            "pattern": "^[a-fA-F0-9]{24}$",
             "description": "MongoDB ObjectId (24 hex chars)"
           },
           "contactId": {
             "type": "string",
-            "pattern": "^[a-f\\d]{24}$",
+            "pattern": "^[a-fA-F0-9]{24}$",
             "description": "MongoDB ObjectId (24 hex chars)"
           },
           "direction": {
@@ -5011,8 +4930,7 @@
             },
             "required": [
               "waMediaId"
-            ],
-            "additionalProperties": false
+            ]
           },
           "location": {
             "type": "object",
@@ -5033,8 +4951,7 @@
             "required": [
               "latitude",
               "longitude"
-            ],
-            "additionalProperties": false
+            ]
           },
           "reply": {
             "description": "Button / list reply the customer tapped",
@@ -5046,8 +4963,7 @@
               "title": {
                 "type": "string"
               }
-            },
-            "additionalProperties": false
+            }
           },
           "reaction": {
             "type": "object",
@@ -5061,8 +4977,7 @@
             },
             "required": [
               "messageId"
-            ],
-            "additionalProperties": false
+            ]
           },
           "replyToWaMessageId": {
             "type": "string"
@@ -5081,7 +4996,6 @@
           "statusAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           },
           "error": {
@@ -5099,8 +5013,7 @@
             },
             "required": [
               "code"
-            ],
-            "additionalProperties": false
+            ]
           },
           "sentBy": {
             "description": "Agent who sent an outbound message",
@@ -5109,19 +5022,16 @@
           "sentAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           },
           "createdAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           },
           "updatedAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           }
         },
@@ -5135,15 +5045,14 @@
           "sentAt",
           "createdAt",
           "updatedAt"
-        ],
-        "additionalProperties": false
+        ]
       },
       "Label": {
         "type": "object",
         "properties": {
           "_id": {
             "type": "string",
-            "pattern": "^[a-f\\d]{24}$",
+            "pattern": "^[a-fA-F0-9]{24}$",
             "description": "MongoDB ObjectId (24 hex chars)"
           },
           "name": {
@@ -5163,13 +5072,11 @@
           "createdAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           },
           "updatedAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           }
         },
@@ -5180,15 +5087,14 @@
           "color",
           "createdAt",
           "updatedAt"
-        ],
-        "additionalProperties": false
+        ]
       },
       "Stage": {
         "type": "object",
         "properties": {
           "_id": {
             "type": "string",
-            "pattern": "^[a-f\\d]{24}$",
+            "pattern": "^[a-fA-F0-9]{24}$",
             "description": "MongoDB ObjectId (24 hex chars)"
           },
           "name": {
@@ -5210,15 +5116,14 @@
           "name",
           "color",
           "probability"
-        ],
-        "additionalProperties": false
+        ]
       },
       "Pipeline": {
         "type": "object",
         "properties": {
           "_id": {
             "type": "string",
-            "pattern": "^[a-f\\d]{24}$",
+            "pattern": "^[a-fA-F0-9]{24}$",
             "description": "MongoDB ObjectId (24 hex chars)"
           },
           "name": {
@@ -5231,7 +5136,7 @@
               "properties": {
                 "_id": {
                   "type": "string",
-                  "pattern": "^[a-f\\d]{24}$",
+                  "pattern": "^[a-fA-F0-9]{24}$",
                   "description": "MongoDB ObjectId (24 hex chars)"
                 },
                 "name": {
@@ -5253,21 +5158,18 @@
                 "name",
                 "color",
                 "probability"
-              ],
-              "additionalProperties": false
+              ]
             },
             "description": "Array order is board order"
           },
           "createdAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           },
           "updatedAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           }
         },
@@ -5277,8 +5179,7 @@
           "stages",
           "createdAt",
           "updatedAt"
-        ],
-        "additionalProperties": false
+        ]
       },
       "Board": {
         "type": "object",
@@ -5288,7 +5189,7 @@
             "properties": {
               "_id": {
                 "type": "string",
-                "pattern": "^[a-f\\d]{24}$",
+                "pattern": "^[a-fA-F0-9]{24}$",
                 "description": "MongoDB ObjectId (24 hex chars)"
               },
               "name": {
@@ -5298,8 +5199,7 @@
             "required": [
               "_id",
               "name"
-            ],
-            "additionalProperties": false
+            ]
           },
           "columns": {
             "type": "array",
@@ -5308,7 +5208,7 @@
               "properties": {
                 "_id": {
                   "type": "string",
-                  "pattern": "^[a-f\\d]{24}$",
+                  "pattern": "^[a-fA-F0-9]{24}$",
                   "description": "MongoDB ObjectId (24 hex chars)"
                 },
                 "name": {
@@ -5343,8 +5243,7 @@
                 "dealCount",
                 "totalValue",
                 "weightedValue"
-              ],
-              "additionalProperties": false
+              ]
             }
           },
           "totals": {
@@ -5365,23 +5264,21 @@
               "dealCount",
               "totalValue",
               "weightedValue"
-            ],
-            "additionalProperties": false
+            ]
           }
         },
         "required": [
           "pipeline",
           "columns",
           "totals"
-        ],
-        "additionalProperties": false
+        ]
       },
       "Deal": {
         "type": "object",
         "properties": {
           "_id": {
             "type": "string",
-            "pattern": "^[a-f\\d]{24}$",
+            "pattern": "^[a-fA-F0-9]{24}$",
             "description": "MongoDB ObjectId (24 hex chars)"
           },
           "title": {
@@ -5397,22 +5294,22 @@
           },
           "pipelineId": {
             "type": "string",
-            "pattern": "^[a-f\\d]{24}$",
+            "pattern": "^[a-fA-F0-9]{24}$",
             "description": "MongoDB ObjectId (24 hex chars)"
           },
           "stageId": {
             "type": "string",
-            "pattern": "^[a-f\\d]{24}$",
+            "pattern": "^[a-fA-F0-9]{24}$",
             "description": "MongoDB ObjectId (24 hex chars)"
           },
           "contactId": {
             "type": "string",
-            "pattern": "^[a-f\\d]{24}$",
+            "pattern": "^[a-fA-F0-9]{24}$",
             "description": "MongoDB ObjectId (24 hex chars)"
           },
           "conversationId": {
             "type": "string",
-            "pattern": "^[a-f\\d]{24}$",
+            "pattern": "^[a-fA-F0-9]{24}$",
             "description": "MongoDB ObjectId (24 hex chars)"
           },
           "ownerId": {
@@ -5423,7 +5320,7 @@
             "type": "array",
             "items": {
               "type": "string",
-              "pattern": "^[a-f\\d]{24}$",
+              "pattern": "^[a-fA-F0-9]{24}$",
               "description": "MongoDB ObjectId (24 hex chars)"
             }
           },
@@ -5441,13 +5338,11 @@
           "expectedCloseDate": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           },
           "closedAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           },
           "notes": {
@@ -5460,13 +5355,11 @@
           "createdAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           },
           "updatedAt": {
             "type": "string",
             "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp (UTC)"
           }
         },
@@ -5483,8 +5376,7 @@
           "createdBy",
           "createdAt",
           "updatedAt"
-        ],
-        "additionalProperties": false
+        ]
       }
     }
   },

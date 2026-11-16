@@ -40,8 +40,16 @@ function clean(schema: unknown): unknown {
     if (k === '$schema') continue;
     // zod emits ±2^53 bounds for every integer; they are noise in docs.
     if ((k === 'minimum' && v === -MAX_SAFE) || (k === 'maximum' && v === MAX_SAFE)) continue;
-    // `format: email` says enough; the regex only clutters the document.
-    if (k === 'pattern' && (schema as Json).format === 'email') continue;
+    // `format` says enough for emails and timestamps; the regexes only clutter the document.
+    if (k === 'pattern' && ['email', 'date-time'].includes(String((schema as Json).format)))
+      continue;
+    // zod objects strip unknown keys rather than reject them, and Mongoose adds `__v` to documents.
+    if (k === 'additionalProperties' && v === false) continue;
+    // JSON Schema has no flags, so spell out the `i` of lib/validation's objectId regex.
+    if (k === 'pattern' && v === '^[a-f\\d]{24}$') {
+      out[k] = '^[a-fA-F0-9]{24}$';
+      continue;
+    }
     out[k] = clean(v);
   }
   return out;
@@ -151,7 +159,7 @@ function operation(routeKey: string, doc: OperationDoc, roles: readonly Role[] |
       isPublic ? codes(403, []) : codes(403, ['FORBIDDEN (role or ownership check failed)']),
     );
   }
-  if (path.includes('{') || doc.body || extra[404]) {
+  if (path.includes('{') || extra[404]) {
     responses['404'] = errorResponse(codes(404, ['NOT_FOUND']));
   }
   for (const status of Object.keys(extra).map(Number)) {

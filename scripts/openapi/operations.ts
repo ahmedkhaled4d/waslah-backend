@@ -387,6 +387,7 @@ export const operations: Record<string, OperationDoc> = {
     body: createDealSchema,
     status: 201,
     response: one('Deal'),
+    errors: { 404: ['NOT_FOUND (pipeline, stage, contact or conversation)'] },
   },
   'PATCH /v1/deals/{id}': {
     tag: 'Deals',
@@ -403,6 +404,7 @@ export const operations: Record<string, OperationDoc> = {
     body: moveDealSchema,
     status: 200,
     response: one('Deal'),
+    errors: { 404: ['NOT_FOUND (deal, pipeline or stage)'] },
   },
   'POST /v1/deals/{id}/status': {
     tag: 'Deals',

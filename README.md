@@ -9,6 +9,7 @@ TypeScript on AWS Lambda, MongoDB Atlas, deployed with AWS CDK. See `AGENTS.md` 
 - **Conversations**: list and filter (inbox, status, assignee, label), assign, claim, change status, move between inboxes, mark read, reply (24-hour window enforced).
 - **Labels**: shared labels for conversations and deals.
 - **Pipelines and deals**: pipelines with ordered stages and win probability, deals with value, owner, status (open/won/lost), labels, and a board endpoint with per-stage totals.
+- **Login and users**: email/password login that issues JWTs, admin-managed users with roles (admin, supervisor, agent) and active/disabled status.
 
 ## Setup
 
@@ -40,15 +41,45 @@ After the first deploy, set these secrets in AWS Secrets Manager (they're create
 Then:
 
 1. Run `MONGODB_URI="..." npm run sync-indexes` once.
-2. In the Meta app dashboard → WhatsApp → Configuration, set the callback URL to the `WebhookUrl` stack output, enter the verify token, and subscribe to the **messages** field.
+2. Create the first admin (it can then create everyone else through the API):
+   ```bash
+   MONGODB_URI="..." ADMIN_EMAIL=you@example.com ADMIN_PASSWORD='min 8 chars' ADMIN_NAME="Your Name" npm run create-admin
+   ```
+3. In the Meta app dashboard → WhatsApp → Configuration, set the callback URL to the `WebhookUrl` stack output, enter the verify token, and subscribe to the **messages** field.
 
 ## Auth
 
-Every `/v1` request needs `Authorization: Bearer <JWT>` signed with HS256 using `jwt-secret`, with claims `sub` (user id) and `role` (`admin` | `supervisor` | `agent`). User management and login are not built yet; issue tokens from your auth service.
+`POST /v1/auth/login` with `{ email, password }` returns `{ token, tokenType, expiresAt, user }`. Every other `/v1` request needs `Authorization: Bearer <token>`. Tokens are HS256 JWTs signed with `jwt-secret`, carry `sub` (user id) and `role` (`admin` | `supervisor` | `agent`), and expire after 12 hours.
+
+Passwords are hashed with scrypt (Node's built-in). Login failures return `401 UNAUTHORIZED` for both unknown emails and wrong passwords; disabled accounts get `403 USER_DISABLED`. A disabled user's existing token keeps working until it expires, except on `GET /v1/auth/me`, which checks the account.
+
+Only admins create and edit users (`/v1/users`). Admins can't change their own role or disable themselves.
+
+## OpenAPI
+
+`openapi.json` at the repo root describes every route (OpenAPI 3.1). It's generated from the route tables and zod schemas, so regenerate it after changing an endpoint:
+
+```bash
+npm run openapi
+```
+
+The generator fails if a route has no entry in `scripts/openapi/operations.ts`, so new routes must be documented there. Import the file into Postman, Swagger UI, or a client generator.
 
 ## API
 
 Lists return `{ data, nextCursor }`. Pass `?limit=&cursor=` to page. Errors return `{ error: { code, message, details } }`.
+
+### Auth and users
+
+| Method | Path                       | Roles    | Body                                                                        |
+| ------ | -------------------------- | -------- | --------------------------------------------------------------------------- |
+| POST   | `/v1/auth/login`           | public   | `{ email, password }`                                                       |
+| GET    | `/v1/auth/me`              | any      |                                                                             |
+| POST   | `/v1/auth/change-password` | any      | `{ currentPassword, newPassword }`                                          |
+| GET    | `/v1/users`                | managers |                                                                             |
+| GET    | `/v1/users/{id}`           | managers |                                                                             |
+| POST   | `/v1/users`                | admin    | `{ email, name, password, role? }` (role defaults to `agent`)               |
+| PATCH  | `/v1/users/{id}`           | admin    | `{ name?, role?, status?: active\|disabled, password? }` (password = reset) |
 
 ### Inboxes
 
