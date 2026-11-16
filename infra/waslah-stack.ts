@@ -15,6 +15,7 @@ import { routes as dealRoutes } from '../src/functions/http/deals';
 import { routes as inboxRoutes } from '../src/functions/http/inboxes';
 import { routes as labelRoutes } from '../src/functions/http/labels';
 import { routes as pipelineRoutes } from '../src/functions/http/pipelines';
+import { routes as userRoutes } from '../src/functions/http/users';
 import type { RouteTable } from '../src/lib/http';
 
 export interface WaslahStackProps extends StackProps {
@@ -142,6 +143,7 @@ export class WaslahStack extends Stack {
     });
 
     const modules: { name: string; path: string; routes: RouteTable; sendsMessages?: boolean }[] = [
+      { name: 'users-api', path: 'http/users.ts', routes: userRoutes },
       { name: 'inboxes-api', path: 'http/inboxes.ts', routes: inboxRoutes },
       {
         name: 'conversations-api',

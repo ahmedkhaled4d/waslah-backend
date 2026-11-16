@@ -10,12 +10,14 @@ import { InboxModel } from '../src/modules/inboxes/inboxes.model';
 import { LabelModel } from '../src/modules/labels/labels.model';
 import { MessageModel } from '../src/modules/messages/messages.model';
 import { PipelineModel } from '../src/modules/pipelines/pipelines.model';
+import { UserModel } from '../src/modules/users/users.model';
 
 const uri = process.env.MONGODB_URI;
 if (!uri) throw new Error('Set MONGODB_URI');
 
 await mongoose.connect(uri, { autoIndex: false });
 for (const model of [
+  UserModel,
   ContactModel,
   InboxModel,
   ConversationModel,

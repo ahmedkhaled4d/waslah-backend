@@ -29,8 +29,20 @@ export interface Route {
   handler: (ctx: RouteContext) => Promise<RouteResponse>;
 }
 
+/** A route that needs no bearer token (e.g. login). Keep these to a minimum. */
+export interface PublicRoute {
+  public: true;
+  handler: (ctx: PublicRouteContext) => Promise<RouteResponse>;
+}
+
+export type PublicRouteContext = Omit<RouteContext, 'user'>;
+
 /** Keys are API Gateway route keys, e.g. "GET /v1/inboxes/{id}". */
-export type RouteTable = Record<string, Route>;
+export type RouteTable = Record<string, Route | PublicRoute>;
+
+export function isPublicRoute(route: Route | PublicRoute): route is PublicRoute {
+  return 'public' in route && route.public;
+}
 
 export function json(status: number, body?: unknown): HttpResult {
   return {
@@ -73,16 +85,21 @@ export function createHttpHandler(routes: RouteTable) {
     try {
       const route = routes[event.routeKey];
       if (!route) throw new NotFoundError('Route');
-      const user = await authenticate(event.headers.authorization);
-      requireRole(user, route.roles);
-      await connectDb();
-      const res = await route.handler({
+      const ctx = (): PublicRouteContext => ({
         event,
-        user,
         params: event.pathParameters ?? {},
         query: event.queryStringParameters ?? {},
         body: parseJsonBody(event),
       });
+      if (isPublicRoute(route)) {
+        await connectDb();
+        const res = await route.handler(ctx());
+        return json(res.status, res.body);
+      }
+      const user = await authenticate(event.headers.authorization);
+      requireRole(user, route.roles);
+      await connectDb();
+      const res = await route.handler({ ...ctx(), user });
       return json(res.status, res.body);
     } catch (err) {
       return toErrorResponse(err);

@@ -10,7 +10,9 @@
     "synth": "cdk synth",
     "deploy:dev": "cdk deploy --context stage=dev",
     "deploy:prod": "cdk deploy --context stage=prod",
-    "sync-indexes": "tsx scripts/sync-indexes.ts"
+    "sync-indexes": "tsx scripts/sync-indexes.ts",
+    "create-admin": "tsx scripts/create-admin.ts",
+    "openapi": "tsx scripts/generate-openapi.ts"
   },
   "author": "",
   "license": "ISC",
