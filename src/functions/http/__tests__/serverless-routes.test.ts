@@ -51,8 +51,6 @@ describe('serverless.yml', () => {
   });
 
   it('has no HTTP functions without a route table', () => {
-    expect(Object.keys(events).sort()).toEqual(
-      [...Object.keys(TABLES), 'whatsapp-webhook'].sort(),
-    );
+    expect(Object.keys(events).sort()).toEqual([...Object.keys(TABLES), 'whatsapp-webhook'].sort());
   });
 });

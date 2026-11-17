@@ -1,6 +1,6 @@
 # Waslah WhatsApp CRM — Backend
 
-TypeScript on AWS Lambda, MongoDB Atlas, deployed with AWS CDK. See `AGENTS.md` for architecture and conventions.
+TypeScript on AWS Lambda, MongoDB Atlas, deployed with the Serverless Framework (v4, `serverless.yml`). See `AGENTS.md` for architecture and conventions.
 
 ## What's implemented
 
@@ -20,40 +20,44 @@ npm run build && npm run lint && npm test
 
 ### Run locally
 
-`npm run dev` starts a local HTTP server (default `http://localhost:3000`) that serves every API route and the WhatsApp webhook, reloading on changes. Copy `.env.example` to `.env` and fill it in: the app still reads secrets from Secrets Manager by ARN, so point `AWS_PROFILE` at the dev account.
+`npm run dev` starts a local HTTP server (default `http://localhost:3000`) that serves every API route and the WhatsApp webhook, reloading on changes. Copy `.env.example` to `.env` and fill it in. Secrets are plain values in `.env`; AWS credentials (`AWS_PROFILE`) are only needed to exercise the webhook, which enqueues to SQS.
 
 ### Deploy (dev)
 
-```bash
-npx cdk bootstrap   # once per account/region
-npm run deploy:dev -- \
-  -c waPhoneNumberId=YOUR_PHONE_NUMBER_ID \
-  -c waWabaId=YOUR_WABA_ID \
-  -c waGraphApiVersion=v24.0
-```
+`npm run deploy:dev` runs `serverless deploy --stage dev`. The framework loads `.env` automatically, so every value in `.env.example` (secrets included) must be set. Serverless v4 needs a login the first time (`npx serverless login`).
 
-After the first deploy, set these secrets in AWS Secrets Manager (they're created with placeholder values):
+### Deploy (prod)
 
-| Secret                       | Value                                                            |
-| ---------------------------- | ---------------------------------------------------------------- |
-| `waslah/dev/mongodb-uri`     | Atlas connection string                                          |
-| `waslah/dev/wa-access-token` | Permanent System User token                                      |
-| `waslah/dev/wa-app-secret`   | Meta app secret                                                  |
-| `waslah/dev/wa-verify-token` | Any random string; enter the same one in Meta's webhook settings |
-| `waslah/dev/jwt-secret`      | Random string, at least 32 chars, used to sign user JWTs         |
+Production deploys run from GitHub Actions only: **Actions → Deploy (prod) → Run workflow** (`.github/workflows/deploy-prod.yml`). Configure the `production` environment under Settings → Environments (add required reviewers):
+
+| Kind     | Name                    | Value                                                            |
+| -------- | ----------------------- | ---------------------------------------------------------------- |
+| Secret   | `AWS_DEPLOY_ROLE_ARN`   | IAM role GitHub assumes via OIDC to deploy                       |
+| Secret   | `SERVERLESS_ACCESS_KEY` | Serverless Framework v4 access key                               |
+| Secret   | `MONGODB_URI`           | Atlas connection string                                          |
+| Secret   | `WA_ACCESS_TOKEN`       | Permanent System User token                                      |
+| Secret   | `WA_APP_SECRET`         | Meta app secret                                                  |
+| Secret   | `WA_VERIFY_TOKEN`       | Any random string; enter the same one in Meta's webhook settings |
+| Secret   | `JWT_SECRET`            | Random string, at least 32 chars, used to sign user JWTs         |
+| Variable | `AWS_REGION`            | e.g. `us-east-1`                                                 |
+| Variable | `WA_PHONE_NUMBER_ID`    | Sender phone number ID                                           |
+| Variable | `WA_WABA_ID`            | WhatsApp Business Account ID                                     |
+| Variable | `WA_GRAPH_API_VERSION`  | e.g. `v24.0`                                                     |
+
+The deploy job runs build, lint and tests first, then injects these into the Lambda environment. Each function only gets the secrets it uses (the webhook never sees `MONGODB_URI`).
 
 Then:
 
-1. Run `MONGODB_URI="..." npm run sync-indexes` once.
+1. Run `npm run sync-indexes` once (reads `MONGODB_URI` from `.env` or the shell).
 2. Create the first admin (it can then create everyone else through the API):
    ```bash
-   MONGODB_URI="..." ADMIN_EMAIL=you@example.com ADMIN_PASSWORD='min 8 chars' ADMIN_NAME="Your Name" npm run create-admin
+   ADMIN_EMAIL=you@example.com ADMIN_PASSWORD='min 8 chars' ADMIN_NAME="Your Name" npm run create-admin
    ```
-3. In the Meta app dashboard → WhatsApp → Configuration, set the callback URL to the `WebhookUrl` stack output, enter the verify token, and subscribe to the **messages** field.
+3. In the Meta app dashboard → WhatsApp → Configuration, set the callback URL to the `WebhookUrl` output of `serverless deploy`, enter the verify token, and subscribe to the **messages** field.
 
 ## Auth
 
-`POST /v1/auth/login` with `{ email, password }` returns `{ token, tokenType, expiresAt, user }`. Every other `/v1` request needs `Authorization: Bearer <token>`. Tokens are HS256 JWTs signed with `jwt-secret`, carry `sub` (user id) and `role` (`admin` | `supervisor` | `agent`), and expire after 12 hours.
+`POST /v1/auth/login` with `{ email, password }` returns `{ token, tokenType, expiresAt, user }`. Every other `/v1` request needs `Authorization: Bearer <token>`. Tokens are HS256 JWTs signed with `JWT_SECRET`, carry `sub` (user id) and `role` (`admin` | `supervisor` | `agent`), and expire after 12 hours.
 
 Passwords are hashed with scrypt (Node's built-in). Login failures return `401 UNAUTHORIZED` for both unknown emails and wrong passwords; disabled accounts get `403 USER_DISABLED`. A disabled user's existing token keeps working until it expires, except on `GET /v1/auth/me`, which checks the account.
 

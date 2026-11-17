@@ -22,23 +22,23 @@ Core modules (✅ = implemented):
 
 ## Tech stack
 
-| Concern                 | Choice                                    |
-| ----------------------- | ----------------------------------------- |
-| Language                | TypeScript (strict mode), Node.js 22.x    |
-| Database                | MongoDB Atlas, accessed via Mongoose      |
-| Compute                 | AWS Lambda (arm64)                        |
-| HTTP                    | API Gateway HTTP API                      |
-| Real-time               | API Gateway WebSocket API                 |
-| Queues                  | Amazon SQS (+ DLQ per queue)              |
-| Scheduling              | Amazon EventBridge Scheduler              |
-| Media storage           | Amazon S3                                 |
-| Secrets                 | AWS Secrets Manager / SSM Parameter Store |
-| Infrastructure as code  | AWS CDK (TypeScript) in `infra/`          |
-| Bundling                | esbuild (via CDK `NodejsFunction`)        |
-| Validation              | zod                                       |
-| Logging/metrics/tracing | Powertools for AWS Lambda (TypeScript)    |
-| Tests                   | Vitest                                    |
-| Lint/format             | ESLint + Prettier                         |
+| Concern                 | Choice                                                                        |
+| ----------------------- | ----------------------------------------------------------------------------- |
+| Language                | TypeScript (strict mode), Node.js 22.x                                        |
+| Database                | MongoDB Atlas, accessed via Mongoose                                          |
+| Compute                 | AWS Lambda (arm64)                                                            |
+| HTTP                    | API Gateway HTTP API                                                          |
+| Real-time               | API Gateway WebSocket API                                                     |
+| Queues                  | Amazon SQS (+ DLQ per queue)                                                  |
+| Scheduling              | Amazon EventBridge Scheduler                                                  |
+| Media storage           | Amazon S3                                                                     |
+| Secrets                 | `.env` locally; GitHub Actions secrets for prod (injected as Lambda env vars) |
+| Infrastructure as code  | Serverless Framework v4 (`serverless.yml`)                                    |
+| Bundling                | esbuild (Serverless v4 built-in)                                              |
+| Validation              | zod                                                                           |
+| Logging/metrics/tracing | Powertools for AWS Lambda (TypeScript)                                        |
+| Tests                   | Vitest                                                                        |
+| Lint/format             | ESLint + Prettier                                                             |
 
 Do not introduce new frameworks or major dependencies (Express, NestJS, ORMs other than Mongoose, etc.) without being asked.
 
@@ -66,11 +66,12 @@ Do not introduce new frameworks or major dependencies (Express, NestJS, ORMs oth
 │   │   ├── http.ts           # response helpers, error mapping
 │   │   ├── auth.ts           # JWT signing/verification, role guards
 │   │   ├── password.ts       # scrypt hashing (no external dependency)
-│   │   ├── config.ts         # env parsing with zod (fail fast)
+│   │   ├── config.ts         # env + secret parsing with zod (fail fast)
 │   │   ├── logger.ts         # Powertools logger/metrics/tracer
 │   │   └── errors.ts         # AppError hierarchy
 │   └── types/
-├── infra/                    # CDK app and stacks
+├── serverless.yml            # functions, routes, queues, alarms (Serverless Framework v4)
+├── .github/workflows/        # deploy-prod.yml (production deploys)
 ├── scripts/                  # one-off scripts (seed, migrations, OpenAPI generator)
 │   └── openapi/              # response components + per-route docs for openapi.json
 ├── test/                     # integration tests & fixtures
@@ -80,7 +81,7 @@ Do not introduce new frameworks or major dependencies (Express, NestJS, ORMs oth
 
 ### HTTP routing
 
-Each file in `src/functions/http/` exports `routes: RouteTable`, keyed by API Gateway route key (`'GET /v1/deals/{id}'`), with the roles allowed for each route. `createHttpHandler(routes)` dispatches on `event.routeKey`, authenticates, checks roles, and connects to Mongo. **The CDK stack reads these route tables to create API routes**, so a new route only needs to be added to the table.
+Each file in `src/functions/http/` exports `routes: RouteTable`, keyed by API Gateway route key (`'GET /v1/deals/{id}'`), with the roles allowed for each route. `createHttpHandler(routes)` dispatches on `event.routeKey`, authenticates, checks roles, and connects to Mongo. **Every route must also be listed as an `httpApi` event under its function in `serverless.yml`**; `src/functions/http/__tests__/serverless-routes.test.ts` fails if the two drift apart.
 
 A route declared with `public: true` instead of `roles` skips authentication (only `POST /v1/auth/login` today). Don't add more without a strong reason.
 
@@ -103,37 +104,37 @@ npm run lint           # eslint
 npm run format         # prettier --write
 npm test               # vitest run (unit)
 npm run dev            # local HTTP server on :3000 for all routes (loads .env; see .env.example)
-npm run synth          # cdk synth (needs -c context, see README)
-npm run sync-indexes   # build Mongo indexes (MONGODB_URI=...)
-npm run create-admin   # bootstrap the first admin (MONGODB_URI, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_NAME)
+npm run package        # serverless package --stage dev (build artifacts, no deploy)
+npm run sync-indexes   # build Mongo indexes (MONGODB_URI from .env)
+npm run create-admin   # bootstrap the first admin (MONGODB_URI, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_NAME from .env)
 npm run openapi        # regenerate openapi.json from route tables + zod schemas
-npm run deploy:dev     # cdk deploy --context stage=dev
-npm run deploy:prod    # cdk deploy --context stage=prod (humans only)
+npm run deploy:dev     # serverless deploy --stage dev (values from .env)
+# prod deploys run only from GitHub Actions: .github/workflows/deploy-prod.yml (humans only)
 ```
 
 Before finishing any task, run `npm run build && npm run lint && npm test`, and make sure all three pass.
 
-**Never run `deploy:prod`** or any command that changes production AWS resources or the production database.
+**Never run `deploy:prod` or trigger the prod deploy workflow** or any command that changes production AWS resources or the production database.
 
 ## Configuration and secrets
 
 All config is read and validated in `src/lib/config.ts` with zod at cold start. Never read `process.env` anywhere else.
 
-| Variable                     | Purpose                                            |
-| ---------------------------- | -------------------------------------------------- |
-| `STAGE`                      | `dev` / `prod`                                     |
-| `MONGODB_URI_SECRET_ARN`     | Secrets Manager ARN of the Atlas connection string |
-| `WA_ACCESS_TOKEN_SECRET_ARN` | Permanent System User token                        |
-| `WA_APP_SECRET_ARN`          | Meta app secret (webhook signature verification)   |
-| `WA_VERIFY_TOKEN_SECRET_ARN` | Webhook verification handshake token               |
-| `WA_PHONE_NUMBER_ID`         | Sender phone number ID                             |
-| `WA_WABA_ID`                 | WhatsApp Business Account ID (templates)           |
-| `WA_GRAPH_API_VERSION`       | e.g. `v24.0` — never hardcode the version          |
-| `WA_INBOUND_QUEUE_URL`       | SQS queue the webhook writes to                    |
-| `MEDIA_BUCKET`               | S3 bucket for media (planned)                      |
-| `JWT_SECRET_ARN`             | Auth signing secret                                |
+| Variable               | Purpose                                           |
+| ---------------------- | ------------------------------------------------- |
+| `STAGE`                | `dev` / `prod`                                    |
+| `MONGODB_URI`          | Atlas connection string (secret)                  |
+| `WA_ACCESS_TOKEN`      | Permanent System User token (secret)              |
+| `WA_APP_SECRET`        | Meta app secret, webhook signature check (secret) |
+| `WA_VERIFY_TOKEN`      | Webhook verification handshake token (secret)     |
+| `WA_PHONE_NUMBER_ID`   | Sender phone number ID                            |
+| `WA_WABA_ID`           | WhatsApp Business Account ID (templates)          |
+| `WA_GRAPH_API_VERSION` | e.g. `v24.0` — never hardcode the version         |
+| `WA_INBOUND_QUEUE_URL` | SQS queue the webhook writes to                   |
+| `MEDIA_BUCKET`         | S3 bucket for media (planned)                     |
+| `JWT_SECRET`           | Auth signing secret (secret)                      |
 
-- Fetch secrets once per cold start (Powertools Parameters, with caching). Never fetch them per request.
+- Secrets are plain env vars: `.env` locally, GitHub Actions `production` environment secrets for prod (passed to Lambda by `serverless.yml`). Read them only via `getSecret()` in `lib/config.ts`, and give each function only the secrets it uses.
 - Never log tokens, secrets, full phone numbers, or message bodies at `info` level. Mask phone numbers (`+9665******12`).
 - Never commit `.env` files or real credentials.
 
@@ -235,14 +236,14 @@ All config is read and validated in `src/lib/config.ts` with zod at cold start. 
 - Keep webhook payload fixtures in `test/fixtures/whatsapp/` (real-shaped, with anonymized numbers). Add one for every new message type handled.
 - Bug fixes must include a test that reproduces the bug.
 
-## Infrastructure (CDK)
+## Infrastructure (Serverless Framework)
 
-- One stack per stage: `waslah-dev`, `waslah-prod`. Resource names include the stage.
+- One `serverless.yml`, one stack per stage (`waslah-dev`, `waslah-prod`). Resource names include the stage.
 - Every SQS queue has a DLQ (`maxReceiveCount: 5`) and a CloudWatch alarm on DLQ depth > 0.
 - Lambdas use `arm64`, Node.js 22.x, explicit memory and timeout, and least-privilege IAM. Grant access only to the specific secrets, queues, and buckets each function uses.
 - The webhook Lambda timeout is ≤ 5s. SQS consumer timeouts must be shorter than the queue's visibility timeout.
 - The S3 media bucket is private, encrypted, and has public access blocked.
-- Don't change `infra/` and application code in the same PR unless the feature requires both.
+- Don't change `serverless.yml` / `.github/workflows/` and application code in the same PR unless the feature requires both.
 
 ## Git and PRs
 
