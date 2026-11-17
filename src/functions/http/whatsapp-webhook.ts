@@ -1,10 +1,9 @@
 import { timingSafeEqual } from 'node:crypto';
 import type { Context } from 'aws-lambda';
-import { getConfig } from '../../lib/config';
+import { getConfig, getSecret } from '../../lib/config';
 import { json, rawBody, toErrorResponse, type HttpEvent, type HttpResult } from '../../lib/http';
 import { logger } from '../../lib/logger';
 import { enqueue } from '../../lib/queue';
-import { getSecretValue } from '../../lib/secrets';
 import { isValidSignature } from '../../lib/whatsapp/signature';
 
 function safeEqual(a: string, b: string): boolean {
@@ -14,9 +13,9 @@ function safeEqual(a: string, b: string): boolean {
 }
 
 /** GET /webhooks/whatsapp — Meta's verification handshake. */
-async function verify(event: HttpEvent): Promise<HttpResult> {
+function verify(event: HttpEvent): HttpResult {
   const q = event.queryStringParameters ?? {};
-  const expected = await getSecretValue(getConfig().WA_VERIFY_TOKEN_SECRET_ARN);
+  const expected = getSecret('WA_VERIFY_TOKEN');
   if (
     q['hub.mode'] === 'subscribe' &&
     q['hub.verify_token'] &&
@@ -35,7 +34,7 @@ async function verify(event: HttpEvent): Promise<HttpResult> {
 async function receive(event: HttpEvent): Promise<HttpResult> {
   const config = getConfig();
   const body = rawBody(event);
-  const appSecret = await getSecretValue(config.WA_APP_SECRET_ARN);
+  const appSecret = getSecret('WA_APP_SECRET');
   if (!isValidSignature(body, event.headers['x-hub-signature-256'], appSecret)) {
     logger.warn('Rejected webhook with invalid signature');
     return json(401, {
@@ -48,7 +47,7 @@ async function receive(event: HttpEvent): Promise<HttpResult> {
 
 export const handler = async (event: HttpEvent, _context: Context): Promise<HttpResult> => {
   try {
-    return event.requestContext.http.method === 'GET' ? await verify(event) : await receive(event);
+    return event.requestContext.http.method === 'GET' ? verify(event) : await receive(event);
   } catch (err) {
     return toErrorResponse(err);
   }

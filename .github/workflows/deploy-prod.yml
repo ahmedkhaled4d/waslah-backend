@@ -1,0 +1,54 @@
+# Production deploy. Run manually from the Actions tab (humans only).
+#
+# Configure in Settings → Environments → "production" (add required reviewers there):
+#   Secrets:   AWS_DEPLOY_ROLE_ARN, SERVERLESS_ACCESS_KEY,
+#              MONGODB_URI, WA_ACCESS_TOKEN, WA_APP_SECRET, WA_VERIFY_TOKEN, JWT_SECRET
+#   Variables: AWS_REGION, WA_PHONE_NUMBER_ID, WA_WABA_ID, WA_GRAPH_API_VERSION
+name: Deploy (prod)
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write # OIDC → AWS, no long-lived AWS keys
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run lint
+      - run: npm test
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: serverless deploy --stage prod
+        run: npx serverless deploy --stage prod
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          WA_PHONE_NUMBER_ID: ${{ vars.WA_PHONE_NUMBER_ID }}
+          WA_WABA_ID: ${{ vars.WA_WABA_ID }}
+          WA_GRAPH_API_VERSION: ${{ vars.WA_GRAPH_API_VERSION }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          WA_ACCESS_TOKEN: ${{ secrets.WA_ACCESS_TOKEN }}
+          WA_APP_SECRET: ${{ secrets.WA_APP_SECRET }}
+          WA_VERIFY_TOKEN: ${{ secrets.WA_VERIFY_TOKEN }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}

@@ -16,5 +16,5 @@
     "forceConsistentCasingInFileNames": true,
     "noEmit": true
   },
-  "include": ["src", "infra", "scripts", "test", "vitest.config.ts", "eslint.config.js"]
+  "include": ["src", "scripts", "test", "vitest.config.ts", "eslint.config.js"]
 }

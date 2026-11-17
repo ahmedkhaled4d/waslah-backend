@@ -1,6 +1,6 @@
 /**
  * Builds/updates MongoDB indexes for every model. Run before deploying to prod:
- *   MONGODB_URI="mongodb+srv://..." npm run sync-indexes
+ *   npm run sync-indexes   (reads MONGODB_URI from `.env` or the shell)
  */
 import mongoose from 'mongoose';
 import { ContactModel } from '../src/modules/contacts/contacts.model';

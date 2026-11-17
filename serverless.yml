@@ -1,0 +1,212 @@
+# Waslah backend — Serverless Framework v4.
+#
+#   dev:  values come from `.env` (loaded automatically by the framework) → `npm run deploy:dev`
+#   prod: values come from GitHub Actions secrets/variables → .github/workflows/deploy-prod.yml
+#
+# HTTP routes must match the `routes` tables in src/functions/http/*.ts.
+# `src/functions/http/__tests__/serverless-routes.test.ts` fails if they drift apart.
+
+service: waslah
+frameworkVersion: '4'
+
+stages:
+  default:
+    params:
+      logLevel: DEBUG
+      logRetentionInDays: 14
+  prod:
+    params:
+      logLevel: INFO
+      logRetentionInDays: 90
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  architecture: arm64
+  region: ${env:AWS_REGION, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  memorySize: 512
+  timeout: 10
+  logRetentionInDays: ${param:logRetentionInDays}
+  httpApi:
+    name: waslah-${sls:stage}
+    cors:
+      allowedOrigins: ['*']
+      allowedHeaders: [authorization, content-type]
+  # Non-secret config shared by every function. Secrets are added per function below.
+  environment:
+    STAGE: ${sls:stage}
+    WA_PHONE_NUMBER_ID: ${env:WA_PHONE_NUMBER_ID}
+    WA_WABA_ID: ${env:WA_WABA_ID}
+    WA_GRAPH_API_VERSION: ${env:WA_GRAPH_API_VERSION}
+    WA_INBOUND_QUEUE_URL: !Ref WaInboundQueue
+    POWERTOOLS_LOG_LEVEL: ${param:logLevel}
+    NODE_OPTIONS: --enable-source-maps
+  iam:
+    role:
+      statements:
+        # Webhook → inbound queue. (Consume permissions for the SQS event source are added automatically.)
+        - Effect: Allow
+          Action: sqs:SendMessage
+          Resource: !GetAtt WaInboundQueue.Arn
+
+build:
+  esbuild:
+    bundle: true
+    minify: true
+    sourcemap: true
+    target: node22
+    format: esm
+    # ESM bundles need a real `require` for CommonJS dependencies.
+    banner:
+      js: "import { createRequire } from 'module'; const require = createRequire(import.meta.url);"
+
+# Secrets are injected only into the functions that use them.
+custom:
+  apiSecrets: &apiSecrets
+    MONGODB_URI: ${env:MONGODB_URI}
+    JWT_SECRET: ${env:JWT_SECRET}
+
+functions:
+  # WhatsApp webhook: verify signature + enqueue only. No DB access.
+  whatsapp-webhook:
+    handler: src/functions/http/whatsapp-webhook.handler
+    memorySize: 256
+    timeout: 5
+    environment:
+      WA_APP_SECRET: ${env:WA_APP_SECRET}
+      WA_VERIFY_TOKEN: ${env:WA_VERIFY_TOKEN}
+    events:
+      - httpApi: 'GET /webhooks/whatsapp'
+      - httpApi: 'POST /webhooks/whatsapp'
+
+  # Inbound consumer: saves contacts, conversations, messages and statuses.
+  wa-inbound:
+    handler: src/functions/queues/wa-inbound.handler
+    timeout: 20 # must stay below the queue's 120s visibility timeout
+    environment:
+      MONGODB_URI: ${env:MONGODB_URI}
+    events:
+      - sqs:
+          arn: !GetAtt WaInboundQueue.Arn
+          batchSize: 10
+          functionResponseType: ReportBatchItemFailures
+
+  users-api:
+    handler: src/functions/http/users.handler
+    environment: *apiSecrets
+    events:
+      - httpApi: 'POST /v1/auth/login'
+      - httpApi: 'GET /v1/auth/me'
+      - httpApi: 'POST /v1/auth/change-password'
+      - httpApi: 'GET /v1/users'
+      - httpApi: 'GET /v1/users/{id}'
+      - httpApi: 'POST /v1/users'
+      - httpApi: 'PATCH /v1/users/{id}'
+
+  inboxes-api:
+    handler: src/functions/http/inboxes.handler
+    environment: *apiSecrets
+    events:
+      - httpApi: 'GET /v1/inboxes'
+      - httpApi: 'GET /v1/inboxes/{id}'
+      - httpApi: 'POST /v1/inboxes'
+      - httpApi: 'PATCH /v1/inboxes/{id}'
+      - httpApi: 'DELETE /v1/inboxes/{id}'
+      - httpApi: 'POST /v1/inboxes/{id}/members'
+      - httpApi: 'DELETE /v1/inboxes/{id}/members/{userId}'
+
+  conversations-api:
+    handler: src/functions/http/conversations.handler
+    timeout: 15 # sends WhatsApp replies synchronously
+    environment:
+      <<: *apiSecrets
+      WA_ACCESS_TOKEN: ${env:WA_ACCESS_TOKEN}
+    events:
+      - httpApi: 'GET /v1/conversations'
+      - httpApi: 'GET /v1/conversations/{id}'
+      - httpApi: 'POST /v1/conversations/{id}/assign'
+      - httpApi: 'POST /v1/conversations/{id}/status'
+      - httpApi: 'POST /v1/conversations/{id}/move'
+      - httpApi: 'POST /v1/conversations/{id}/read'
+      - httpApi: 'POST /v1/conversations/{id}/labels'
+      - httpApi: 'DELETE /v1/conversations/{id}/labels/{labelId}'
+      - httpApi: 'GET /v1/conversations/{id}/messages'
+      - httpApi: 'POST /v1/conversations/{id}/messages'
+
+  labels-api:
+    handler: src/functions/http/labels.handler
+    environment: *apiSecrets
+    events:
+      - httpApi: 'GET /v1/labels'
+      - httpApi: 'POST /v1/labels'
+      - httpApi: 'PATCH /v1/labels/{id}'
+      - httpApi: 'DELETE /v1/labels/{id}'
+
+  pipelines-api:
+    handler: src/functions/http/pipelines.handler
+    environment: *apiSecrets
+    events:
+      - httpApi: 'GET /v1/pipelines'
+      - httpApi: 'GET /v1/pipelines/{id}'
+      - httpApi: 'GET /v1/pipelines/{id}/board'
+      - httpApi: 'POST /v1/pipelines'
+      - httpApi: 'PATCH /v1/pipelines/{id}'
+      - httpApi: 'DELETE /v1/pipelines/{id}'
+      - httpApi: 'POST /v1/pipelines/{id}/stages'
+      - httpApi: 'PUT /v1/pipelines/{id}/stages/order'
+      - httpApi: 'PATCH /v1/pipelines/{id}/stages/{stageId}'
+      - httpApi: 'DELETE /v1/pipelines/{id}/stages/{stageId}'
+
+  deals-api:
+    handler: src/functions/http/deals.handler
+    environment: *apiSecrets
+    events:
+      - httpApi: 'GET /v1/deals'
+      - httpApi: 'GET /v1/deals/{id}'
+      - httpApi: 'POST /v1/deals'
+      - httpApi: 'PATCH /v1/deals/{id}'
+      - httpApi: 'POST /v1/deals/{id}/move'
+      - httpApi: 'POST /v1/deals/{id}/status'
+      - httpApi: 'POST /v1/deals/{id}/labels'
+      - httpApi: 'DELETE /v1/deals/{id}/labels/{labelId}'
+      - httpApi: 'DELETE /v1/deals/{id}'
+
+resources:
+  Resources:
+    WaInboundDlq:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: waslah-${sls:stage}-wa-inbound-dlq
+        MessageRetentionPeriod: 1209600 # 14 days
+        SqsManagedSseEnabled: true
+
+    WaInboundQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: waslah-${sls:stage}-wa-inbound
+        VisibilityTimeout: 120
+        SqsManagedSseEnabled: true
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt WaInboundDlq.Arn
+          maxReceiveCount: 5
+
+    WaInboundDlqAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: waslah-${sls:stage}-wa-inbound-dlq-not-empty
+        Namespace: AWS/SQS
+        MetricName: ApproximateNumberOfMessagesVisible
+        Dimensions:
+          - Name: QueueName
+            Value: !GetAtt WaInboundDlq.QueueName
+        Statistic: Maximum
+        Period: 60
+        EvaluationPeriods: 1
+        Threshold: 0
+        ComparisonOperator: GreaterThanThreshold
+        TreatMissingData: notBreaching
+
+  Outputs:
+    WebhookUrl:
+      Value: !Join ['', [!GetAtt HttpApi.ApiEndpoint, '/webhooks/whatsapp']]

@@ -1,7 +1,6 @@
 import { jwtVerify, SignJWT } from 'jose';
-import { getConfig } from './config';
+import { getSecret } from './config';
 import { ForbiddenError, UnauthorizedError } from './errors';
-import { getSecretValue } from './secrets';
 
 export const ROLES = ['admin', 'supervisor', 'agent'] as const;
 export type Role = (typeof ROLES)[number];
@@ -22,10 +21,10 @@ export function isManager(user: AuthUser): boolean {
   return MANAGERS.includes(user.role);
 }
 
-let key: Promise<Uint8Array> | undefined;
+let key: Uint8Array | undefined;
 
-function getKey(): Promise<Uint8Array> {
-  key ??= getSecretValue(getConfig().JWT_SECRET_ARN).then((s) => new TextEncoder().encode(s));
+function getKey(): Uint8Array {
+  key ??= new TextEncoder().encode(getSecret('JWT_SECRET'));
   return key;
 }
 
@@ -34,7 +33,7 @@ export async function authenticate(authorization: string | undefined): Promise<A
   const token = authorization?.startsWith('Bearer ') ? authorization.slice(7) : undefined;
   if (!token) throw new UnauthorizedError();
   try {
-    const { payload } = await jwtVerify(token, await getKey(), { algorithms: ['HS256'] });
+    const { payload } = await jwtVerify(token, getKey(), { algorithms: ['HS256'] });
     const role = payload.role;
     if (!payload.sub || typeof role !== 'string' || !ROLES.includes(role as Role)) {
       throw new UnauthorizedError('Invalid token claims');
@@ -55,7 +54,7 @@ export async function signToken(user: AuthUser): Promise<{ token: string; expire
     .setSubject(user.id)
     .setIssuedAt(issuedAt)
     .setExpirationTime(expiresAt)
-    .sign(await getKey());
+    .sign(getKey());
   return { token, expiresAt: new Date(expiresAt * 1000) };
 }
 

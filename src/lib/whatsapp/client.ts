@@ -1,6 +1,5 @@
-import { getConfig } from '../config';
+import { getConfig, getSecret } from '../config';
 import { WhatsAppApiError } from '../errors';
-import { getSecretValue } from '../secrets';
 
 /** Graph API error codes worth retrying (rate limits / throughput). */
 const RETRYABLE_CODES = new Set([4, 80007, 130429, 131056]);
@@ -27,7 +26,7 @@ export async function sendWhatsAppMessage(
   replyToWaMessageId?: string,
 ): Promise<{ waMessageId: string }> {
   const config = getConfig();
-  const token = await getSecretValue(config.WA_ACCESS_TOKEN_SECRET_ARN);
+  const token = getSecret('WA_ACCESS_TOKEN');
   const url = `https://graph.facebook.com/${config.WA_GRAPH_API_VERSION}/${config.WA_PHONE_NUMBER_ID}/messages`;
 
   const res = await fetch(url, {

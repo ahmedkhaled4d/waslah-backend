@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
-import { getConfig } from './config';
-import { getSecretValue } from './secrets';
+import { getConfig, getSecret } from './config';
 
 mongoose.set('bufferCommands', false);
 
@@ -10,7 +9,7 @@ let connection: Promise<typeof mongoose> | undefined;
 export function connectDb(): Promise<typeof mongoose> {
   connection ??= (async () => {
     const config = getConfig();
-    const uri = await getSecretValue(config.MONGODB_URI_SECRET_ARN);
+    const uri = getSecret('MONGODB_URI');
     return mongoose.connect(uri, {
       maxPoolSize: 5,
       serverSelectionTimeoutMS: 5000,

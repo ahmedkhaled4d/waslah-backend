@@ -1,6 +1,7 @@
 /**
  * Creates the first admin user so someone can log in and create the rest via the API.
- *   MONGODB_URI="mongodb+srv://..." ADMIN_EMAIL=you@example.com ADMIN_PASSWORD='...' ADMIN_NAME="Your Name" npm run create-admin
+ *   ADMIN_EMAIL=you@example.com ADMIN_PASSWORD='...' ADMIN_NAME="Your Name" npm run create-admin
+ * MONGODB_URI (and optionally the ADMIN_* values) are read from `.env` or the shell.
  * Safe to rerun: exits without changes if the email already exists.
  */
 import mongoose from 'mongoose';
@@ -10,6 +11,7 @@ const uri = process.env.MONGODB_URI;
 const email = process.env.ADMIN_EMAIL;
 const password = process.env.ADMIN_PASSWORD;
 const name = process.env.ADMIN_NAME ?? 'Admin';
+
 if (!uri || !email || !password) {
   throw new Error('Set MONGODB_URI, ADMIN_EMAIL and ADMIN_PASSWORD');
 }

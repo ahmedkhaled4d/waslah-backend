@@ -1,5 +1,6 @@
 openapi.json
-cdk.out/
+.serverless/
+.esbuild/
 node_modules/
 coverage/
 .env.example

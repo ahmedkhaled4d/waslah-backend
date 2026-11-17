@@ -2,8 +2,8 @@
  * Local HTTP server that mounts every Lambda route table so the API can be exercised
  * without deploying. Run with `npm run dev` (loads `.env`; see `.env.example`).
  *
- * Secrets are still read from Secrets Manager by ARN, so AWS credentials for the dev
- * account must be available (e.g. `AWS_PROFILE` in `.env`).
+ * Secrets are plain values in `.env`. AWS credentials are only needed if you exercise the
+ * webhook, which enqueues to the SQS queue in `WA_INBOUND_QUEUE_URL`.
  */
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import type { Context } from 'aws-lambda';
