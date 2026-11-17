@@ -102,6 +102,7 @@ npm run build          # tsc --noEmit type check
 npm run lint           # eslint
 npm run format         # prettier --write
 npm test               # vitest run (unit)
+npm run dev            # local HTTP server on :3000 for all routes (loads .env; see .env.example)
 npm run synth          # cdk synth (needs -c context, see README)
 npm run sync-indexes   # build Mongo indexes (MONGODB_URI=...)
 npm run create-admin   # bootstrap the first admin (MONGODB_URI, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_NAME)

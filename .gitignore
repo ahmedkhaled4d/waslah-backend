@@ -3,3 +3,4 @@ cdk.out/
 coverage/
 .env
 .env.*
+!.env.example

@@ -7,6 +7,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
+    "dev": "tsx watch --env-file-if-exists=.env scripts/dev-server.ts",
     "synth": "cdk synth",
     "deploy:dev": "cdk deploy --context stage=dev",
     "deploy:prod": "cdk deploy --context stage=prod",

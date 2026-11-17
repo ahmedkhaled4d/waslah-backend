@@ -18,6 +18,10 @@ npm ci
 npm run build && npm run lint && npm test
 ```
 
+### Run locally
+
+`npm run dev` starts a local HTTP server (default `http://localhost:3000`) that serves every API route and the WhatsApp webhook, reloading on changes. Copy `.env.example` to `.env` and fill it in: the app still reads secrets from Secrets Manager by ARN, so point `AWS_PROFILE` at the dev account.
+
 ### Deploy (dev)
 
 ```bash
