@@ -32,6 +32,7 @@ function verify(event: HttpEvent): HttpResult {
 
 /** POST /webhooks/whatsapp — verify the signature, enqueue, return 200 fast. No DB work here. */
 async function receive(event: HttpEvent): Promise<HttpResult> {
+  console.log('received incoming request event', event);
   const config = getConfig();
   const body = rawBody(event);
   const appSecret = getSecret('WA_APP_SECRET');

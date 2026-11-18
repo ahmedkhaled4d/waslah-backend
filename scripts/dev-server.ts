@@ -142,8 +142,16 @@ function toEvent(
 
 const lambdaContext = { callbackWaitsForEmptyEventLoop: true } as Context;
 
+/** Mirrors `provider.httpApi.cors` in serverless.yml so browser frontends can call the local server. */
+const CORS_HEADERS: Record<string, string> = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-headers': 'authorization, content-type',
+  'access-control-allow-methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+  'access-control-max-age': '86400',
+};
+
 function send(res: ServerResponse, result: HttpResult): void {
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = { ...CORS_HEADERS };
   for (const [k, v] of Object.entries(result.headers ?? {})) headers[k] = String(v);
   res.writeHead(result.statusCode ?? 200, headers);
   res.end(result.body ?? '');
@@ -153,6 +161,11 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
   const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
   const method = req.method ?? 'GET';
   const body = await readBody(req);
+
+  if (method === 'OPTIONS') {
+    send(res, { statusCode: 204 });
+    return;
+  }
 
   if (url.pathname === WEBHOOK_PATH && (method === 'GET' || method === 'POST')) {
     const event = toEvent(req, url, `${method} ${WEBHOOK_PATH}`, {}, body);

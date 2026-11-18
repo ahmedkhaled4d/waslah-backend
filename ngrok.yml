@@ -1,0 +1,8 @@
+version: 3
+agent:
+  authtoken: XXXXXXXXXXXXXXXXXXXXXXXXXX
+endpoints:
+  - name: waslah
+    url: https://radiative-pat-superstrenuously.ngrok-free.dev
+    upstream:
+      url: 3000
