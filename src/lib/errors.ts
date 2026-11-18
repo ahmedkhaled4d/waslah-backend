@@ -61,5 +61,5 @@ export class WhatsAppApiError extends AppError {
   }
 }
 
-/** Thrown by queue consumers when a message should be retried by SQS. */
+/** Thrown by webhook processing when Meta should redeliver the payload (returned as 500). */
 export class RetryableError extends Error {}

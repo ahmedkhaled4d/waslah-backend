@@ -88,7 +88,7 @@ const messageSchema = new Schema<Message>(
   { timestamps: true },
 );
 
-// Idempotency: Meta and SQS may deliver the same message more than once.
+// Idempotency: Meta may deliver the same message more than once.
 messageSchema.index(
   { waMessageId: 1 },
   { unique: true, partialFilterExpression: { waMessageId: { $type: 'string' } } },

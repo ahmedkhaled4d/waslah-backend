@@ -4,7 +4,7 @@ TypeScript on AWS Lambda, MongoDB Atlas, deployed with the Serverless Framework 
 
 ## What's implemented
 
-- **Message storage**: the WhatsApp webhook (signature-verified) puts payloads on SQS, and a consumer saves contacts, conversations and messages. Delivery/read statuses are applied idempotently and never move backwards.
+- **Message storage**: the WhatsApp webhook (signature-verified) saves contacts, conversations and messages directly to MongoDB. Delivery/read statuses are applied idempotently and never move backwards.
 - **Team inboxes**: create inboxes, add/remove members, choose the default inbox for new chats.
 - **Conversations**: list and filter (inbox, status, assignee, label), assign, claim, change status, move between inboxes, mark read, reply (24-hour window enforced).
 - **Labels**: shared labels for conversations and deals.
@@ -20,7 +20,7 @@ npm run build && npm run lint && npm test
 
 ### Run locally
 
-`npm run dev` starts a local HTTP server (default `http://localhost:3000`) that serves every API route and the WhatsApp webhook, reloading on changes. Copy `.env.example` to `.env` and fill it in. Secrets are plain values in `.env`; AWS credentials (`AWS_PROFILE`) are only needed to exercise the webhook, which enqueues to SQS.
+`npm run dev` starts a local HTTP server (default `http://localhost:3000`) that serves every API route and the WhatsApp webhook, reloading on changes. Copy `.env.example` to `.env` and fill it in. Secrets are plain values in `.env`; AWS credentials (`AWS_PROFILE`) are only needed to deploy.
 
 ### Deploy (dev)
 

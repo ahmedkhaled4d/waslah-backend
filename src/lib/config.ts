@@ -5,7 +5,6 @@ const EnvSchema = z.object({
   WA_PHONE_NUMBER_ID: z.string().min(1),
   WA_WABA_ID: z.string().min(1),
   WA_GRAPH_API_VERSION: z.string().regex(/^v\d+\.\d+$/, 'Expected a version like v23.0'),
-  WA_INBOUND_QUEUE_URL: z.string().url(),
 });
 
 export type Config = z.infer<typeof EnvSchema>;

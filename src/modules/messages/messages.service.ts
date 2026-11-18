@@ -30,7 +30,7 @@ export const ALLOWED_PREVIOUS: Record<WebhookStatus['status'], readonly MessageS
 const STATUS_RACE_WINDOW_MS = 5 * 60 * 1000;
 
 export const messagesService = {
-  /** Entry point for the inbound SQS consumer. */
+  /** Entry point for the WhatsApp webhook. */
   async handleWebhook(payload: WebhookPayload): Promise<void> {
     for (const entry of payload.entry) {
       for (const change of entry.changes) {

@@ -39,16 +39,8 @@ provider:
     WA_PHONE_NUMBER_ID: ${env:WA_PHONE_NUMBER_ID}
     WA_WABA_ID: ${env:WA_WABA_ID}
     WA_GRAPH_API_VERSION: ${env:WA_GRAPH_API_VERSION}
-    WA_INBOUND_QUEUE_URL: !Ref WaInboundQueue
     POWERTOOLS_LOG_LEVEL: ${param:logLevel}
     NODE_OPTIONS: --enable-source-maps
-  iam:
-    role:
-      statements:
-        # Webhook → inbound queue. (Consume permissions for the SQS event source are added automatically.)
-        - Effect: Allow
-          Action: sqs:SendMessage
-          Resource: !GetAtt WaInboundQueue.Arn
 
 build:
   esbuild:
@@ -68,29 +60,17 @@ custom:
     JWT_SECRET: ${env:JWT_SECRET}
 
 functions:
-  # WhatsApp webhook: verify signature + enqueue only. No DB access.
+  # WhatsApp webhook: verify signature, then save contacts, conversations, messages and statuses.
   whatsapp-webhook:
     handler: src/functions/http/whatsapp-webhook.handler
-    memorySize: 256
-    timeout: 5
+    timeout: 15
     environment:
       WA_APP_SECRET: ${env:WA_APP_SECRET}
       WA_VERIFY_TOKEN: ${env:WA_VERIFY_TOKEN}
+      MONGODB_URI: ${env:MONGODB_URI}
     events:
       - httpApi: 'GET /webhooks/whatsapp'
       - httpApi: 'POST /webhooks/whatsapp'
-
-  # Inbound consumer: saves contacts, conversations, messages and statuses.
-  wa-inbound:
-    handler: src/functions/queues/wa-inbound.handler
-    timeout: 20 # must stay below the queue's 120s visibility timeout
-    environment:
-      MONGODB_URI: ${env:MONGODB_URI}
-    events:
-      - sqs:
-          arn: !GetAtt WaInboundQueue.Arn
-          batchSize: 10
-          functionResponseType: ReportBatchItemFailures
 
   users-api:
     handler: src/functions/http/users.handler
@@ -173,40 +153,6 @@ functions:
       - httpApi: 'DELETE /v1/deals/{id}'
 
 resources:
-  Resources:
-    WaInboundDlq:
-      Type: AWS::SQS::Queue
-      Properties:
-        QueueName: waslah-${sls:stage}-wa-inbound-dlq
-        MessageRetentionPeriod: 1209600 # 14 days
-        SqsManagedSseEnabled: true
-
-    WaInboundQueue:
-      Type: AWS::SQS::Queue
-      Properties:
-        QueueName: waslah-${sls:stage}-wa-inbound
-        VisibilityTimeout: 120
-        SqsManagedSseEnabled: true
-        RedrivePolicy:
-          deadLetterTargetArn: !GetAtt WaInboundDlq.Arn
-          maxReceiveCount: 5
-
-    WaInboundDlqAlarm:
-      Type: AWS::CloudWatch::Alarm
-      Properties:
-        AlarmName: waslah-${sls:stage}-wa-inbound-dlq-not-empty
-        Namespace: AWS/SQS
-        MetricName: ApproximateNumberOfMessagesVisible
-        Dimensions:
-          - Name: QueueName
-            Value: !GetAtt WaInboundDlq.QueueName
-        Statistic: Maximum
-        Period: 60
-        EvaluationPeriods: 1
-        Threshold: 0
-        ComparisonOperator: GreaterThanThreshold
-        TreatMissingData: notBreaching
-
   Outputs:
     WebhookUrl:
       Value: !Join ['', [!GetAtt HttpApi.ApiEndpoint, '/webhooks/whatsapp']]

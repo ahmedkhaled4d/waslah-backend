@@ -29,7 +29,7 @@ Core modules (✅ = implemented):
 | Compute                 | AWS Lambda (arm64)                                                            |
 | HTTP                    | API Gateway HTTP API                                                          |
 | Real-time               | API Gateway WebSocket API                                                     |
-| Queues                  | Amazon SQS (+ DLQ per queue)                                                  |
+| Queues                  | Amazon SQS (+ DLQ per queue) — planned for outbound campaigns; inbound is synchronous |
 | Scheduling              | Amazon EventBridge Scheduler                                                  |
 | Media storage           | Amazon S3                                                                     |
 | Secrets                 | `.env` locally; GitHub Actions secrets for prod (injected as Lambda env vars) |
@@ -50,7 +50,7 @@ Do not introduce new frameworks or major dependencies (Express, NestJS, ORMs oth
 │   ├── functions/            # Lambda entry points only (thin handlers)
 │   │   ├── http/             # one Lambda per module; each exports a `routes` table + `handler`
 │   │   ├── ws/               # WebSocket $connect/$disconnect/$default (planned)
-│   │   ├── queues/           # SQS consumers
+│   │   ├── queues/           # SQS consumers (planned, outbound campaigns)
 │   │   └── scheduled/        # EventBridge Scheduler targets (planned)
 │   ├── modules/
 │   │   └── <module>/
@@ -130,7 +130,6 @@ All config is read and validated in `src/lib/config.ts` with zod at cold start. 
 | `WA_PHONE_NUMBER_ID`   | Sender phone number ID                            |
 | `WA_WABA_ID`           | WhatsApp Business Account ID (templates)          |
 | `WA_GRAPH_API_VERSION` | e.g. `v24.0` — never hardcode the version         |
-| `WA_INBOUND_QUEUE_URL` | SQS queue the webhook writes to                   |
 | `MEDIA_BUCKET`         | S3 bucket for media (planned)                     |
 | `JWT_SECRET`           | Auth signing secret (secret)                      |
 
@@ -180,9 +179,9 @@ All config is read and validated in `src/lib/config.ts` with zod at cold start. 
 
 1. `GET` handles the verification handshake (`hub.mode`, `hub.verify_token`, `hub.challenge`).
 2. `POST` **must verify `X-Hub-Signature-256`** (HMAC-SHA256 of the **raw body** with the app secret) using `crypto.timingSafeEqual`. Reject with 401 on mismatch.
-3. After verification, push the payload to the `wa-inbound` SQS queue and **return 200 immediately**. Never do DB writes or outbound calls in the webhook Lambda.
-4. The SQS consumer handles `messages` (inbound) and `statuses` (sent/delivered/read/failed).
-5. Processing must be **idempotent**: Meta retries and SQS delivers at least once. Rely on the unique `waMessageId` index and treat duplicate-key errors (`11000`) as success.
+3. After verification, parse the payload and call `messagesService.handleWebhook` directly, then return 200. Unrecognized payloads are acknowledged with 200; processing failures return 5xx so Meta redelivers. No outbound Graph API calls in the webhook Lambda.
+4. The webhook handles `messages` (inbound) and `statuses` (sent/delivered/read/failed).
+5. Processing must be **idempotent**: Meta retries deliveries. Rely on the unique `waMessageId` index and treat duplicate-key errors (`11000`) as success.
 6. Status updates can arrive out of order. Never move a status backwards (`read` > `delivered` > `sent`; `failed` is terminal).
 
 ### Sending
@@ -195,7 +194,7 @@ All config is read and validated in `src/lib/config.ts` with zod at cold start. 
 
 ### Media
 
-- Inbound media URLs are short-lived and need the bearer token. Download them in the queue consumer, upload to S3 under `media/{yyyy}/{mm}/{waMediaId}`, and store the S3 key on the message.
+- Inbound media URLs are short-lived and need the bearer token. Download them asynchronously (not in the webhook request), upload to S3 under `media/{yyyy}/{mm}/{waMediaId}`, and store the S3 key on the message.
 - Serve media to the frontend via short-lived S3 presigned URLs only.
 
 ### Templates
@@ -241,7 +240,7 @@ All config is read and validated in `src/lib/config.ts` with zod at cold start. 
 - One `serverless.yml`, one stack per stage (`waslah-dev`, `waslah-prod`). Resource names include the stage.
 - Every SQS queue has a DLQ (`maxReceiveCount: 5`) and a CloudWatch alarm on DLQ depth > 0.
 - Lambdas use `arm64`, Node.js 22.x, explicit memory and timeout, and least-privilege IAM. Grant access only to the specific secrets, queues, and buckets each function uses.
-- The webhook Lambda timeout is ≤ 5s. SQS consumer timeouts must be shorter than the queue's visibility timeout.
+- The webhook Lambda timeout is ≤ 15s (it writes to MongoDB). SQS consumer timeouts must be shorter than the queue's visibility timeout.
 - The S3 media bucket is private, encrypted, and has public access blocked.
 - Don't change `serverless.yml` / `.github/workflows/` and application code in the same PR unless the feature requires both.
 

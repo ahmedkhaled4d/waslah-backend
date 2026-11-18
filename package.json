@@ -8,6 +8,7 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "dev": "tsx watch --env-file-if-exists=.env scripts/dev-server.ts",
+    "ngrok": "ngrok http 3000 --url https://radiative-pat-superstrenuously.ngrok-free.dev",
     "deploy:dev": "serverless deploy --stage dev",
     "deploy:prod": "serverless deploy --stage prod",
     "sync-indexes": "tsx --env-file-if-exists=.env scripts/sync-indexes.ts",
@@ -19,7 +20,6 @@
   "license": "ISC",
   "dependencies": {
     "@aws-lambda-powertools/logger": "^2.36.0",
-    "@aws-sdk/client-sqs": "^3.1169.0",
     "jose": "^6.2.17",
     "mongoose": "^9.12.1",
     "zod": "^4.6.7"

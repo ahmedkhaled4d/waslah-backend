@@ -1,10 +1,12 @@
 import { timingSafeEqual } from 'node:crypto';
 import type { Context } from 'aws-lambda';
-import { getConfig, getSecret } from '../../lib/config';
+import { getSecret } from '../../lib/config';
+import { connectDb } from '../../lib/db';
 import { json, rawBody, toErrorResponse, type HttpEvent, type HttpResult } from '../../lib/http';
 import { logger } from '../../lib/logger';
-import { enqueue } from '../../lib/queue';
 import { isValidSignature } from '../../lib/whatsapp/signature';
+import { webhookPayloadSchema } from '../../lib/whatsapp/webhook.types';
+import { messagesService } from '../../modules/messages/messages.service';
 
 function safeEqual(a: string, b: string): boolean {
   const ab = Buffer.from(a);
@@ -30,10 +32,11 @@ function verify(event: HttpEvent): HttpResult {
   return json(403, { error: { code: 'FORBIDDEN', message: 'Verification failed', details: {} } });
 }
 
-/** POST /webhooks/whatsapp — verify the signature, enqueue, return 200 fast. No DB work here. */
+/**
+ * POST /webhooks/whatsapp — verify the signature, then save messages and statuses directly.
+ * Processing is idempotent, so a failure may return 5xx and let Meta redeliver the payload.
+ */
 async function receive(event: HttpEvent): Promise<HttpResult> {
-  console.log('received incoming request event', event);
-  const config = getConfig();
   const body = rawBody(event);
   const appSecret = getSecret('WA_APP_SECRET');
   if (!isValidSignature(body, event.headers['x-hub-signature-256'], appSecret)) {
@@ -42,7 +45,16 @@ async function receive(event: HttpEvent): Promise<HttpResult> {
       error: { code: 'INVALID_SIGNATURE', message: 'Invalid signature', details: {} },
     });
   }
-  await enqueue(config.WA_INBOUND_QUEUE_URL, body.toString('utf8'));
+
+  const parsed = webhookPayloadSchema.safeParse(JSON.parse(body.toString('utf8')));
+  if (!parsed.success) {
+    // Not a payload we understand (e.g. another webhook field). Acknowledge so Meta stops retrying.
+    logger.warn('Skipping unrecognized webhook payload');
+    return json(200, { received: true });
+  }
+
+  await connectDb();
+  await messagesService.handleWebhook(parsed.data);
   return json(200, { received: true });
 }
 
